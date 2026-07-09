@@ -1,0 +1,8 @@
+.DS_Store
+esp_side/.pio/
+esp_side/src/secrets.h
+piZero_side/chatbot/bin/
+piZero_side/chatbot/models/
+
+__pycache__/
+*.pyc

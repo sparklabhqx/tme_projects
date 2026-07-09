@@ -1,0 +1,12 @@
+[Unit]
+Description=Bluetooth keyboard pairing agent
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=/home/tinypi/chatbot/bt_keyboard_agent.sh
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target

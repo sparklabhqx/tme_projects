@@ -1,0 +1,18 @@
+[Unit]
+Description=Bluetooth keyboard display typepad
+After=multi-user.target bluetooth.service
+Wants=bluetooth.service
+
+[Service]
+Type=simple
+User=tinypi
+WorkingDirectory=/home/tinypi
+Environment=SDL_VIDEODRIVER=dummy
+ExecStart=/usr/bin/python3 /home/tinypi/usb_keyboard_display.py
+Restart=always
+RestartSec=2
+TimeoutStopSec=3
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target
