@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TME Reaction Lab</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;0,900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0f3176; --sky: #4a86c8; --sky-soft: #eef4fb; --sky-line: #d7e4f4;
+    --bg: #ffffff; --ink: #2b2f36; --muted: #6b7a90; --line: #dbe3f0;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--bg);
+    background-image: radial-gradient(rgba(15, 49, 118, 0.10) 1px, transparent 1px);
+    background-size: 22px 22px;
+    color: var(--ink);
+    font: 15.5px/1.55 Lato, "Helvetica Neue", Arial, sans-serif;
+    padding: 28px 16px 56px; max-width: 760px; margin: 0 auto;
+  }
+  header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 2px; }
+  h1 { font-size: 28px; letter-spacing: 2px; font-weight: 900; color: var(--navy);
+       text-transform: uppercase; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 22px; }
+  #live { font-size: 12.5px; color: var(--muted); font-weight: 700; }
+  #live::before { content: "●"; margin-right: 5px; color: var(--line); }
+  #live.on::before { color: var(--sky); }
+  h2 { font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+       color: var(--navy); font-weight: 900; margin: 30px 0 10px; }
+  .card { background: var(--bg); border: 1px solid var(--line);
+          border-radius: 8px; box-shadow: 0 1px 2px rgba(15, 49, 118, 0.06); }
+
+  /* --- 3D hero --- */
+  #hero { position: relative; overflow: hidden; margin-bottom: 22px;
+          cursor: pointer; user-select: none; }
+  #stage { display: block; width: 100%; height: 400px; }
+  @media (max-width: 560px) { #stage { height: 320px; } }
+  .lane-label { position: absolute; transform: translate(-50%, -50%);
+                pointer-events: none; white-space: nowrap; font-size: 12.5px;
+                color: var(--muted); background: rgba(255,255,255,0.85);
+                padding: 1px 8px; border-radius: 999px; border: 1px solid var(--sky-line); }
+  .lane-label.you { color: #fff; background: var(--navy); font-weight: 900;
+                    border-color: var(--navy); }
+  #go-flash { position: absolute; left: 50%; top: 38%; transform: translate(-50%,-50%);
+              font-size: 64px; font-weight: 900; font-style: italic; color: var(--navy);
+              letter-spacing: 4px; opacity: 0; pointer-events: none;
+              transition: opacity .15s; }
+  #go-flash.on { opacity: 1; }
+  #hero .tag { position: absolute; right: 12px; top: 10px; font-size: 11.5px;
+               font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+               color: var(--sky); background: var(--sky-soft);
+               border: 1px solid var(--sky-line); border-radius: 999px;
+               padding: 2px 10px; }
+  #hero .hint { position: absolute; left: 12px; bottom: 10px; font-size: 12px;
+                color: var(--muted); }
+  .caption { font-size: 13px; color: var(--muted); margin-top: 10px; }
+  .caption b { color: var(--navy); }
+
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .tile { padding: 14px 16px; background: var(--sky-soft);
+          border: 1px solid var(--sky-line); border-radius: 8px; }
+  .tile .v { font-size: 32px; font-weight: 900; color: var(--navy);
+             font-variant-numeric: tabular-nums; }
+  .tile .v small { font-size: 14px; color: var(--muted); font-weight: 400; }
+  .tile .k { font-size: 11.5px; color: var(--muted); letter-spacing: 1.5px;
+             text-transform: uppercase; font-weight: 700; margin-top: 2px; }
+  .chart { padding: 18px 16px; }
+  .row { display: grid; grid-template-columns: 132px 1fr 52px; gap: 10px;
+         align-items: center; padding: 3px 0; }
+  .row .lbl { font-size: 13.5px; color: var(--ink); text-align: right;
+              white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .track { position: relative; height: 14px; }
+  .row .bar { position: absolute; left: 0; top: 0; height: 14px;
+              background: var(--sky); border-radius: 0 4px 4px 0;
+              min-width: 3px; transition: width .4s; }
+  .row.you .bar { background: var(--navy); }
+  .row.you .lbl { color: var(--navy); font-weight: 900; }
+  .row .val { font-size: 13px; color: var(--muted); text-align: right;
+              font-variant-numeric: tabular-nums; }
+  .row:hover .bar { filter: brightness(1.18); }
+  .note { font-size: 13px; color: var(--muted); margin-top: 12px; }
+  .note b, .note i { color: var(--ink); }
+  table { width: 100%; border-collapse: collapse; }
+  .tablecard { overflow: hidden; }
+  th, td { padding: 8px 14px; text-align: left; font-size: 14px; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
+       color: var(--navy); font-weight: 900; background: var(--sky-soft);
+       border-bottom: 1px solid var(--sky-line); }
+  td { border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  tr:last-child td { border-bottom: 0; }
+  td.ms { color: var(--navy); font-weight: 900; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { background: var(--sky-soft); border: 1px solid var(--sky-line);
+          border-radius: 999px; padding: 3px 12px; font-size: 13px;
+          color: var(--navy); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .about { color: var(--muted); font-size: 13.5px; padding: 16px;
+           background: var(--bg); border: 1px solid var(--line); border-radius: 8px; }
+  .about p { margin-bottom: 8px; }
+  .about p:last-child { margin-bottom: 0; }
+  .about b { color: var(--navy); }
+  .empty { color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<header><h1>TME Reaction Lab</h1><span id="live">connecting</span></header>
+<div class="sub">Pico W two-choice reaction game &middot; http://reaction.local</div>
+
+<div class="card" id="hero">
+  <canvas id="stage"></canvas>
+  <div id="go-flash">GO!</div>
+  <span class="tag">10&times; slow motion</span>
+  <span class="hint">click to restart the race</span>
+</div>
+<div class="caption"><b>The start grid.</b> Lights out &mdash; every racer
+launches after its real reaction time, slowed 10&times;. Lane four is
+<b>you</b>, running your best time.</div>
+
+<div class="tiles" style="margin-top:22px">
+  <div class="tile"><div class="v" id="t-best">&ndash;</div><div class="k">best</div></div>
+  <div class="tile"><div class="v" id="t-avg">&ndash;</div><div class="k">average</div></div>
+  <div class="tile"><div class="v" id="t-count">&ndash;</div><div class="k">rounds</div></div>
+</div>
+
+<h2>How you compare</h2>
+<div class="card chart" id="chart"></div>
+<div class="note">Reference values are commonly cited approximations for
+<i>simple</i> reaction (one stimulus, one response). This game is a
+<b>two-choice</b> task &mdash; picking the correct button typically adds
+80&ndash;120&nbsp;ms, so beating a benchmark here means you are genuinely quicker.</div>
+
+<h2>Top 10</h2>
+<div class="card tablecard" id="top"><span class="empty" style="display:block;padding:14px">no scores yet &mdash; go play!</span></div>
+
+<h2>Recent rounds</h2>
+<div class="chips" id="recent"><span class="empty">&ndash;</span></div>
+
+<h2>About reaction time</h2>
+<div class="about">
+<p>A visual reaction is a relay race: photoreceptors fire (~20&nbsp;ms), the
+signal reaches visual cortex (~50&ndash;80&nbsp;ms), the brain decides,
+motor cortex fires, and the command travels down your arm to the finger
+(~20&ndash;30&nbsp;ms). That pipeline puts a hard floor around
+<b>150&nbsp;ms</b> for visual stimuli &mdash; anything faster on this game
+was a guess, not a reaction.</p>
+<p>An F1 start is around <b>200&nbsp;ms</b> from lights-out to moving; in
+athletics anything under <b>100&nbsp;ms</b> off the gun counts as a false
+start. Reaction time is trainable to a point, worsens with fatigue and age,
+and sound beats sight &mdash; auditory reactions run ~30&ndash;50&nbsp;ms
+faster than visual ones.</p>
+</div>
+
+<script>
+const BENCH = [
+  ["Cat reflex", 70, "righting/swat reflexes, ballpark"],
+  ["Esports pro", 150, "elite FPS players, visual"],
+  ["F1 driver", 200, "lights-out to launch"],
+  ["Human median", 273, "large web-test dataset"],
+  ["Age 60+", 330, "typical simple visual"],
+];
+
+function fmt(el, ms, unit) {
+  el.innerHTML = ms == null ? "&ndash;" : ms + (unit ? "<small> " + unit + "</small>" : "");
+}
+
+function chart(best, avg) {
+  const rows = BENCH.map(b => ({l: b[0], ms: b[1], tip: b[2], you: false}));
+  if (best != null) rows.push({l: "YOUR BEST", ms: best, tip: "your fastest valid round", you: true});
+  if (avg != null && avg !== best) rows.push({l: "YOUR AVERAGE", ms: avg, tip: "all-time average", you: true});
+  rows.sort((a, b) => a.ms - b.ms);
+  const max = Math.max(400, ...rows.map(r => r.ms)) * 1.08;
+  document.getElementById("chart").innerHTML = rows.map(r =>
+    '<div class="row' + (r.you ? " you" : "") + '" title="' + r.tip + '">' +
+    '<div class="lbl">' + r.l + '</div>' +
+    '<div class="track"><div class="bar" style="width:' + (100 * r.ms / max).toFixed(1) + '%"></div></div>' +
+    '<div class="val">' + r.ms + '</div></div>').join("");
+}
+
+function update(d) {
+  fmt(document.getElementById("t-best"), d.best, "ms");
+  fmt(document.getElementById("t-avg"), d.avg, "ms");
+  fmt(document.getElementById("t-count"), d.count, "");
+  chart(d.best, d.avg);
+  if (window.setYourBest && d.best != null) window.setYourBest(d.best);
+  if (d.top && d.top.length) {
+    document.getElementById("top").innerHTML =
+      "<table><tr><th>#</th><th>time</th><th>when</th></tr>" +
+      d.top.map((e, i) => "<tr><td>" + (i + 1) + "</td><td class=ms>" + e[0] +
+                " ms</td><td>" + e[1] + "</td></tr>").join("") + "</table>";
+  }
+  if (d.recent && d.recent.length) {
+    document.getElementById("recent").innerHTML =
+      d.recent.map(e => '<span class="chip">' + e[0] + " ms</span>").join("");
+  }
+  const live = document.getElementById("live");
+  live.className = "on";
+  live.textContent = "live" + (d.rssi != null ? " · " + d.rssi + " dBm" : "");
+}
+
+async function poll() {
+  try {
+    const r = await fetch("/data.json");
+    update(await r.json());
+  } catch (e) {
+    const live = document.getElementById("live");
+    live.className = "";
+    live.textContent = "offline";
+  }
+}
+poll();
+setInterval(poll, 3000);
+</script>
+
+<script type="module">
+import * as THREE from "/three.js";
+
+const NAVY = 0x0f3176, SKY = 0x4a86c8, SKYSOFT = 0xeef4fb, SKYLINE = 0xd7e4f4;
+const SLOWMO = 10;          // 1 ms of reaction = 10 ms on screen
+const TRACK = 10;           // world units from start line to end
+const hero = document.getElementById("hero");
+const canvas = document.getElementById("stage");
+const goFlash = document.getElementById("go-flash");
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({canvas, antialias: true});
+} catch (e) {
+  hero.style.display = "none";
+}
+
+if (renderer) {
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xffffff);
+  scene.fog = new THREE.Fog(0xffffff, 19, 36);
+  const camera = new THREE.PerspectiveCamera(38, 2, 0.1, 100);
+
+  // dot-grid lab floor, same motif as the page background
+  const dotCanvas = document.createElement("canvas");
+  dotCanvas.width = dotCanvas.height = 64;
+  const dctx = dotCanvas.getContext("2d");
+  dctx.fillStyle = "#ffffff"; dctx.fillRect(0, 0, 64, 64);
+  dctx.fillStyle = "rgba(15,49,118,0.16)";
+  dctx.beginPath(); dctx.arc(32, 32, 3, 0, 7); dctx.fill();
+  const dotTex = new THREE.CanvasTexture(dotCanvas);
+  dotTex.wrapS = dotTex.wrapT = THREE.RepeatWrapping;
+  dotTex.repeat.set(26, 40);
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(26, 40),
+    new THREE.MeshBasicMaterial({map: dotTex}));
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.z = -10;
+  scene.add(floor);
+
+  const LANES = [
+    {name: "Cat reflex", ms: 70, you: false},
+    {name: "Esports pro", ms: 150, you: false},
+    {name: "F1 driver", ms: 200, you: false},
+    {name: "YOU", ms: 450, you: true},
+    {name: "Human median", ms: 273, you: false},
+    {name: "Age 60+", ms: 330, you: false},
+  ];
+  const laneX = i => (i - (LANES.length - 1) / 2) * 1.7;
+
+  function makeLine(x) {
+    const g = new THREE.PlaneGeometry(0.045, 26);
+    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({color: SKYLINE}));
+    m.rotation.x = -Math.PI / 2;
+    m.position.set(x, 0.002, -8);
+    scene.add(m);
+  }
+  for (let i = 0; i <= LANES.length; i++) makeLine((i - LANES.length / 2) * 1.7);
+  // start line
+  const startLine = new THREE.Mesh(
+    new THREE.PlaneGeometry(LANES.length * 1.7, 0.1),
+    new THREE.MeshBasicMaterial({color: NAVY}));
+  startLine.rotation.x = -Math.PI / 2;
+  startLine.position.set(0, 0.003, 0);
+  scene.add(startLine);
+
+  // checkered finish line at the end of the track
+  const finCanvas = document.createElement("canvas");
+  finCanvas.width = 160; finCanvas.height = 32;
+  const fctx = finCanvas.getContext("2d");
+  for (let cx = 0; cx < 10; cx++)
+    for (let cy = 0; cy < 2; cy++) {
+      fctx.fillStyle = (cx + cy) % 2 ? "#ffffff" : "#0f3176";
+      fctx.fillRect(cx * 16, cy * 16, 16, 16);
+    }
+  const finTex = new THREE.CanvasTexture(finCanvas);
+  const finish = new THREE.Mesh(
+    new THREE.PlaneGeometry(LANES.length * 1.7, 0.85),
+    new THREE.MeshBasicMaterial({map: finTex}));
+  finish.rotation.x = -Math.PI / 2;
+  finish.position.set(0, 0.003, 0.8 - TRACK);
+  scene.add(finish);
+  // flag posts so the line reads from the low camera angle too
+  const postGeo = new THREE.BoxGeometry(0.09, 1.1, 0.09);
+  for (const px of [-LANES.length * 0.85 - 0.15, LANES.length * 0.85 + 0.15]) {
+    const post = new THREE.Mesh(postGeo, new THREE.MeshBasicMaterial({color: NAVY}));
+    post.position.set(px, 0.55, 0.8 - TRACK);
+    scene.add(post);
+  }
+
+  function makeRacer(lane, i) {
+    const grp = new THREE.Group();
+    const geo = new THREE.BoxGeometry(0.85, 0.5, 1.3);
+    const fill = new THREE.Mesh(geo, new THREE.MeshBasicMaterial(
+      {color: lane.you ? NAVY : SKYSOFT}));
+    const edge = new THREE.LineSegments(new THREE.EdgesGeometry(geo),
+      new THREE.LineBasicMaterial({color: lane.you ? NAVY : SKY}));
+    grp.add(fill); grp.add(edge);
+    grp.position.set(laneX(i), 0.25, 0.8);
+    scene.add(grp);
+    lane.obj = grp;
+    const div = document.createElement("div");
+    div.className = "lane-label" + (lane.you ? " you" : "");
+    hero.appendChild(div);
+    lane.label = div;
+  }
+  LANES.forEach(makeRacer);
+
+  // start-light gantry
+  const gantry = new THREE.Group();
+  const barGeo = new THREE.BoxGeometry(LANES.length * 1.7, 0.28, 0.28);
+  const bar = new THREE.Mesh(barGeo, new THREE.MeshBasicMaterial({color: 0xffffff}));
+  gantry.add(bar);
+  gantry.add(new THREE.LineSegments(new THREE.EdgesGeometry(barGeo),
+    new THREE.LineBasicMaterial({color: NAVY})));
+  const lights = [];
+  for (let i = 0; i < 5; i++) {
+    const lg = new THREE.BoxGeometry(0.34, 0.34, 0.1);
+    const lm = new THREE.Mesh(lg, new THREE.MeshBasicMaterial({color: SKYLINE}));
+    lm.position.set((i - 2) * 0.55, 0, 0.16);
+    gantry.add(lm);
+    lights.push(lm);
+  }
+  gantry.position.set(0, 2.1, -1.2);
+  scene.add(gantry);
+  const poleGeo = new THREE.BoxGeometry(0.09, 2.1, 0.09);
+  for (const px of [-LANES.length * 0.85, LANES.length * 0.85]) {
+    const pole = new THREE.Mesh(poleGeo, new THREE.MeshBasicMaterial({color: SKYLINE}));
+    pole.position.set(px, 1.05, -1.2);
+    scene.add(pole);
+  }
+
+  // race state machine
+  let phase = "countdown", phaseT = 0, goT = 0, armHold = 0;
+  function resetRace() {
+    phase = "countdown"; phaseT = 0;
+    armHold = 0.6 + Math.random() * 1.4;
+    lights.forEach(l => l.material.color.setHex(SKYLINE));
+    goFlash.className = "";
+    for (const l of LANES) {
+      l.obj.position.z = 0.8;
+      l.obj.rotation.x = 0;
+      l.v = 0; l.launched = false;
+    }
+  }
+  resetRace();
+  window.setYourBest = ms => { LANES.find(l => l.you).ms = ms; };
+  hero.addEventListener("click", resetRace);
+
+  // gentle mouse parallax
+  let mx = 0, tx = 0;
+  addEventListener("mousemove", e => {
+    tx = (e.clientX / innerWidth - 0.5) * 1.6;
+  });
+
+  const clock = new THREE.Clock();
+  function tick() {
+    const dt = Math.min(clock.getDelta(), 0.05);
+    phaseT += dt;
+    if (phase === "countdown") {
+      const n = Math.floor(phaseT / 0.45);
+      for (let i = 0; i < lights.length; i++)
+        lights[i].material.color.setHex(i < n ? NAVY : SKYLINE);
+      if (n >= 5) { phase = "armed"; phaseT = 0; }
+    } else if (phase === "armed") {
+      if (phaseT >= armHold) {
+        phase = "go"; goT = 0;
+        lights.forEach(l => l.material.color.setHex(SKYLINE));
+        goFlash.className = "on";
+        setTimeout(() => goFlash.className = "", 700);
+      }
+    } else if (phase === "go") {
+      goT += dt;
+      let allDone = true;
+      for (const l of LANES) {
+        const launch = l.ms * SLOWMO / 1000;
+        if (!l.launched && goT >= launch) l.launched = true;
+        if (l.launched) {
+          l.v = Math.min(l.v + 7 * dt, 9);
+          l.obj.position.z -= l.v * dt;
+          l.obj.rotation.x = -Math.min(l.v * 0.03, 0.12);
+        }
+        if (l.obj.position.z > 0.8 - TRACK) allDone = false;
+      }
+      if (allDone) { phase = "hold"; phaseT = 0; }
+      if (goT > 8) { phase = "hold"; phaseT = 0; }
+    } else if (phase === "hold") {
+      if (phaseT > 2.2) resetRace();
+    }
+
+    mx += (tx - mx) * 0.04;
+    camera.position.set(7.6 + mx * 1.8, 4.6, 5.8);
+    camera.lookAt(0, 0.3, -4.2);
+
+    // size to CSS box
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (canvas.width !== Math.floor(w * renderer.getPixelRatio()) ||
+        canvas.height !== Math.floor(h * renderer.getPixelRatio())) {
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    renderer.render(scene, camera);
+
+    // project lane labels into the overlay
+    const v = new THREE.Vector3();
+    for (const l of LANES) {
+      v.set(l.obj.position.x, 0.9, l.obj.position.z).project(camera);
+      const lx = (v.x * 0.5 + 0.5) * w, ly = (-v.y * 0.5 + 0.5) * h;
+      l.label.style.left = lx + "px";
+      l.label.style.top = ly + "px";
+      l.label.style.display = (v.z < 1 && ly > 8 && ly < h - 8) ? "" : "none";
+      l.label.textContent = l.name + " · " + l.ms + " ms";
+    }
+  }
+  renderer.setAnimationLoop(tick);
+}
+</script>
+</body>
+</html>
