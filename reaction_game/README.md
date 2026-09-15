@@ -26,6 +26,8 @@ motion.
 
 ## Hardware
 
+![Wiring diagram](wiring_diagram.png)
+
 | Part | Connection |
 |---|---|
 | Raspberry Pi Pico W / WH | MicroPython v1.29+ (Pico W build) |
