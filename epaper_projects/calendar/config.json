@@ -1,0 +1,5 @@
+{
+  "timezone": "Europe/Berlin",
+  "week_starts_monday": true,
+  "refresh_seconds": 60
+}
