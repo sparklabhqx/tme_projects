@@ -1,0 +1,15 @@
+[Unit]
+Description=TinyPi selected e-paper application
+After=network-online.target bluetooth.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/epaper_projects
+ExecStart=/usr/bin/python3 %h/epaper_projects/run_selected.py
+Restart=on-failure
+RestartSec=20
+TimeoutStopSec=5
+
+[Install]
+WantedBy=default.target

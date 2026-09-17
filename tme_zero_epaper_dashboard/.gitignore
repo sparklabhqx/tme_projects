@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.DS_Store
+
+# Private Spotify OAuth credentials.
+epaper_projects/spotify_player/config.json
+
+# Personal calendar data. Copy from events.example.json locally.
+epaper_projects/calendar/events.json
+
+# Runtime and backup files.
+epaper_projects/*.log
+epaper_projects/**/*.before-*
+epaper_projects/**/*.bak*

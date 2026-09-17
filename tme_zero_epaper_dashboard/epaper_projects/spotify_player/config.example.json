@@ -1,0 +1,5 @@
+{
+  "client_id": "YOUR_SPOTIFY_CLIENT_ID",
+  "client_secret": "YOUR_SPOTIFY_CLIENT_SECRET",
+  "refresh_token": "YOUR_SPOTIFY_REFRESH_TOKEN"
+}
